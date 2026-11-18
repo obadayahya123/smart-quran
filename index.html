@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المُحفّظ الذكي - عبادة يحيى شيخ الدين</title>
+    <link rel="manifest" href="./static/manifest.json">
+    <meta name="theme-color" content="#1b5e20">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="المُحفّظ الذكي">
+    <link rel="apple-touch-icon" href="./static/icon-512.png">
+    <style>
+        :root { --bg: #f8f5ee; --card: #ffffff; --primary: #1b5e20; --text: #2c2c2c; --accent: #d4af37; }
+        body.kids-mode { --bg: #e3f2fd; --card: #fffde7; --primary: #ff6f00; --text: #1a237e; --accent: #00bcd4; }
+        body { background: var(--bg); color: var(--text); font-family: Tahoma, Arial, sans-serif; margin: 0; padding: 15px; transition: 0.3s; }
+        .container { max-width: 650px; margin: auto; }
+        #splashScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1b5e20 0%, #0d3b12 100%); color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; text-align: center; padding: 20px; box-sizing: border-box; transition: opacity 0.6s ease, visibility 0.6s ease; }
+        #splashScreen.hide-splash { opacity: 0; visibility: hidden; pointer-events: none; }
+        .splash-icon { font-size: 75px; margin-bottom: 10px; }
+        .splash-title { font-size: 30px; font-weight: bold; margin: 5px 0; }
+        .splash-sub { font-size: 16px; color: #c8e6c9; margin-bottom: 20px; max-width: 400px; line-height: 1.6; }
+        .splash-btns { display: flex; gap: 12px; width: 100%; max-width: 380px; }
+        .splash-btn-adult { flex: 1; background: #fff; color: #1b5e20; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .splash-btn-kids { flex: 1; background: #ffca28; color: #1a237e; border: none; padding: 14px; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .splash-dev { position: absolute; bottom: 25px; font-size: 13px; color: #a5d6a7; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--primary); color: white; padding: 15px; border-radius: 15px; }
+        .dots-btn { background: rgba(255,255,255,0.2); color: white; border: none; font-size: 22px; font-weight: bold; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; }
+        .mode-btn { background: var(--accent); border: none; padding: 8px 14px; border-radius: 20px; font-weight: bold; cursor: pointer; width: auto; margin: 0; }
+        .stats-bar { display: flex; flex-direction: column; gap: 6px; text-align: center; background: rgba(27, 94, 32, 0.08); padding: 10px 15px; border-radius: 10px; margin-top: 10px; font-weight: bold; font-size: 14px; }
+        .tabs { display: flex; gap: 10px; margin-top: 12px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; background: #ddd; font-weight: bold; cursor: pointer; font-size: 16px; margin: 0; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        .card { background: var(--card); padding: 20px; border-radius: 15px; margin-top: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .row { display: flex; gap: 10px; margin-top: 8px; }
+        .col { flex: 1; }
+        select, button, input { width: 100%; padding: 12px; margin-top: 6px; border-radius: 10px; border: 1px solid #ccc; font-size: 15px; box-sizing: border-box; }
+        .nav-bar { display: flex; gap: 10px; margin-top: 10px; }
+        .nav-btn { flex: 1; background: #eceff1; color: #263238; border: 1px solid #cfd8dc; font-weight: bold; cursor: pointer; padding: 10px; }
+        .legend-bar { display: flex; justify-content: space-around; align-items: center; background: #f1f3f4; border: 1px solid #dcdcdc; border-radius: 10px; padding: 8px 10px; margin: 12px 0; font-size: 13.5px; font-weight: bold; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .ayah-box { font-size: 24px; line-height: 2.2; text-align: center; padding: 18px; background: rgba(0,0,0,0.03); border-radius: 12px; margin: 15px 0; min-height: 80px; }
+        .word-masked { color: transparent; text-shadow: 0 0 12px rgba(0,0,0,0.45); user-select: none; }
+        .word-ok { color: #2e7d32; font-weight: bold; text-shadow: none !important; }
+        .word-miss { color: #d87a00; background: #fff8e1; padding: 1px 5px; border-radius: 5px; border-bottom: 2px solid #fbc02d; font-weight: bold; text-shadow: none !important; }
+        .rec-btn { background: #d32f2f; color: white; font-weight: bold; border: none; font-size: 18px; cursor: pointer; }
+        .rec-btn.recording { background: #2e7d32; }
+        .status-box { text-align: center; font-weight: bold; font-size: 15px; margin-top: 12px; padding: 10px; border-radius: 8px; background: #e8f5e9; color: #1b5e20; border: 1px solid #a5d6a7; }
+        .score-badge { font-size: 21px; font-weight: bold; text-align: center; padding: 10px; background: var(--primary); color: white; border-radius: 10px; margin-bottom: 12px; }
+        .plan-item { border-right: 4px solid var(--primary); background: rgba(27, 94, 32, 0.05); padding: 12px; margin-top: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .apply-btn { width: auto; padding: 8px 12px; background: var(--primary); color: white; border: none; font-size: 14px; cursor: pointer; margin: 0; }
+        #drawerOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9990; display: none; }
+        #sideDrawer { position: fixed; top: 0; left: -320px; width: 300px; max-width: 85%; height: 100%; background: var(--card); color: var(--text); z-index: 9995; box-shadow: 2px 0 15px rgba(0,0,0,0.25); transition: left 0.35s ease; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
+        #sideDrawer.open { left: 0; }
+        .footer { text-align: center; margin-top: 25px; padding: 15px; font-size: 14px; color: #555; border-top: 1px solid #ddd; line-height: 1.6; }
+    </style>
+</head>
+<body>
+<div id="splashScreen">
+    <div class="splash-icon">📖</div>
+    <div class="splash-title">المُحفّظ الذكي</div>
+    <div class="splash-sub">رفيقك الذكي لحفظ وتسميع القرآن الكريم بالذكاء الاصطناعي (WebAssembly) وبناء خطط الحفظ</div>
+    <div style="width:100%; max-width:340px; margin-bottom:15px;">
+        <input type="text" id="userNameInput" placeholder="اكتب اسمك الكريم هنا..." style="text-align:center; font-weight:bold; border:none; border-radius:12px; padding:12px; margin-bottom:8px;">
+        <input type="number" id="userAgeInput" placeholder="العمر (بالسنوات)..." min="4" max="120" style="text-align:center; font-weight:bold; border:none; border-radius:12px; padding:12px;">
+    </div>
+    <div class="splash-btns">
+        <button class="splash-btn-adult" onclick="saveProfileAndEnter(false)">🕌 دخول الكبار</button>
+        <button class="splash-btn-kids" onclick="saveProfileAndEnter(true)">🎈 دخول الصغار</button>
+    </div>
+    <div class="splash-dev">تطوير وتصميم: <strong>عبادة يحيى شيخ الدين</strong></div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <button class="dots-btn" onclick="toggleDrawer()">⋮</button>
+            <h2 style="margin:0; font-size:20px;">📖 المُحفّظ الذكي</h2>
+        </div>
+        <button class="mode-btn" onclick="toggleMode()" id="modeBtn">🎈 وضع الصغار</button>
+    </div>
+
+    <div id="drawerOverlay" onclick="toggleDrawer()"></div>
+    <div id="sideDrawer">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--primary); padding-bottom:10px; margin-bottom:12px;">
+            <h3 style="margin:0; color:var(--primary);">📜 سجل مسيرة <span id="drawerUserName">القارئ</span></h3>
+            <button onclick="toggleDrawer()" style="width:auto; padding:4px 10px; background:#eee; border:none; font-weight:bold; cursor:pointer; margin:0;">✕</button>
+        </div>
+        <div style="background:rgba(27,94,32,0.08); padding:10px; border-radius:10px; margin-bottom:12px; font-size:14px; display:flex; justify-content:space-between;">
+            <span>⭐ النجوم: <strong id="drawerStars">0</strong></span>
+            <span>🏆 المتقنة: <strong id="drawerSessions">0</strong></span>
+        </div>
+        <div id="historyList" style="flex:1; overflow-y:auto; padding-left:4px;"></div>
+        <button onclick="setGroqKey()" style="background:#1b5e20; color:white; border:none; font-weight:bold; margin-top:8px; cursor:pointer;">⚡ تفعيل المحرك الفائق (Groq API)</button>
+        <button onclick="clearHistory()" style="background:#d32f2f; color:white; border:none; font-weight:bold; margin-top:12px; cursor:pointer;">🗑️ مسح السجل وتصفير النجوم</button>
+    </div>
+
+    <div class="stats-bar">
+        <div style="color:var(--primary); font-size:16px;">🌟 مسيرة القارئ: <strong id="displayUserName">ضيف القرآن</strong> <span id="displayUserAge" style="font-size:13px; color:#555;"></span></div>
+        <div style="display:flex; justify-content:space-around; border-top:1px solid rgba(0,0,0,0.08); padding-top:6px;">
+            <span>⭐ النجوم: <strong id="starsCount">0</strong></span>
+            <span>🏆 المتقنة: <strong id="sessionsCount">0</strong></span>
+            <span onclick="editProfile()" style="cursor:pointer; color:#0277bd; text-decoration:underline;">✏️ تعديل</span>
+        </div>
+    </div>
+
+    <div class="tabs" id="adultTabs">
+        <button class="tab-btn active" onclick="switchTab('recite')" id="tabRecite">🎙️ التسميع والتصحيح</button>
+        <button class="tab-btn" onclick="switchTab('planner')" id="tabPlanner">📅 خطة الحفظ</button>
+    </div>
+
+    <div id="reciteSection">
+        <div class="card">
+            <label>اختر السورة:</label>
+            <select id="surahSelect" onchange="onSurahChange()"></select>
+            <div class="row">
+                <div class="col"><label>من الآية:</label><select id="startAyah" onchange="renderAyahs()"></select></div>
+                <div class="col"><label>إلى الآية:</label><select id="endAyah" onchange="renderAyahs()"></select></div>
+            </div>
+            <div class="nav-bar">
+                <button class="nav-btn" onclick="prevPage()">➡️ المقطع السابق</button>
+                <button class="nav-btn" onclick="nextPage()">المقطع التالي ⬅️</button>
+            </div>
+            <div class="legend-bar">
+                <div class="legend-item"><span class="dot" style="background:#2e7d32;"></span><span style="color:#2e7d32;">أخضر: قراءة صحيحة</span></div>
+                <div class="legend-item"><span class="dot" style="background:#fbc02d;"></span><span style="color:#b26a00;">أصفر: كلمة منسية أو متجاوزة</span></div>
+            </div>
+            <button id="listenBtn" onclick="toggleListen()" style="background:#00695c; color:white; font-weight:bold; border:none; cursor:pointer; margin-top:8px;">🔊 استماع لتلاوة الشيخ علي الحذيفي</button>
+            <div id="audioStatus" style="text-align:center; font-size:14px; color:#00695c; font-weight:bold; margin-top:6px; display:none;"></div>
+            <audio id="quranAudio" style="display:none;"></audio>
+            <button onclick="toggleHide()" style="background:#546e7a; color:white; border:none; cursor:pointer;">👁️ إخفاء / إظهار الآيات للتسميع</button>
+            <div id="ayahText" class="ayah-box"></div>
+            <button id="recBtn" class="rec-btn" onclick="toggleRecord()">🎙️ اضغط لبدء التسميع</button>
+            <div id="status" class="status-box" style="display:none;"></div>
+        </div>
+        <div class="card" id="resultCard" style="display:none;">
+            <div id="scoreBadge" class="score-badge"></div>
+            <div id="resultDetails" style="font-size:22px; line-height:2.1; text-align:center;"></div>
+        </div>
+    </div>
+
+    <div id="plannerSection" style="display:none;">
+        <div class="card">
+            <h3 style="margin-top:0; color:var(--primary);">📋 استبيان خطة الحفظ للكبار</h3>
+            <label>1. مستواك الحالي:</label>
+            <select id="qLevel"><option value="beginner">مبتدئ</option><option value="intermediate">متوسط</option><option value="advanced">متقدم</option></select>
+            <div class="row">
+                <div class="col"><label>2. من سورة:</label><select id="qStartSurah"></select></div>
+                <div class="col"><label>إلى سورة:</label><select id="qEndSurah"></select></div>
+            </div>
+            <label>3. في كم يوم تريد إتمام الحفظ؟</label>
+            <input type="number" id="qDays" value="14" min="1" max="365">
+            <label>4. الوقت الأنسب لك:</label>
+            <select id="qTime"><option value="بعد صلاة الفجر">بعد صلاة الفجر</option><option value="بين المغرب والعشاء">بين المغرب والعشاء</option><option value="قبل النوم">قبل النوم</option></select>
+            <button onclick="generatePlan()" style="background:var(--primary); color:white; font-weight:bold; border:none; margin-top:15px;">✨ حساب الورد وحفظ الخطة</button>
+        </div>
+        <div class="card" id="planResultCard" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; color:var(--primary);">🗓️ خطتك المحفوظة</h3>
+                <button onclick="clearPlan()" style="width:auto; padding:6px 10px; background:#d32f2f; color:white; border:none; font-size:12px;">حذف</button>
+            </div>
+            <div id="planProgressBox" style="background:#e8f5e9; border:1px solid #a5d6a7; border-radius:10px; padding:12px; margin-bottom:12px;">
+                <div style="display:flex; justify-content:space-between; font-weight:bold; color:#1b5e20; margin-bottom:6px;">
+                    <span>📊 نسبة إتمام الخطة المتبعة:</span>
+                    <span id="planPercentText">0% (0 من 0 أيام)</span>
+                </div>
+                <div style="width:100%; background:#c8e6c9; border-radius:8px; height:14px; overflow:hidden;">
+                    <div id="planProgressBar" style="width:0%; background:#1b5e20; height:100%; transition:width 0.5s ease;"></div>
+                </div>
+            </div>
+            <div id="planAdvice" style="background:#fff8e1; padding:12px; border-radius:8px; margin:12px 0; line-height:1.7;"></div>
+            <div id="planSchedule"></div>
+        </div>
+    </div>
+
+    <div style="text-align:center; margin-top:15px;">
+        <button id="installAppBtn" onclick="triggerInstall()" style="background:#d4af37; color:#000; font-weight:bold; border:none; padding:12px 20px; border-radius:12px; cursor:pointer; width:auto;">📲 تثبيت التطبيق على جهازك (أندرويد / iOS)</button>
+    </div>
+
+    <div class="footer">
+        <strong>تطبيق المُحفّظ الذكي للقرآن الكريم</strong><br>
+        تم التطوير والتصميم بواسطة: <span style="color:var(--primary); font-weight:bold;">عبادة يحيى شيخ الدين</span> © 2026
+    </div>
+</div>
+<script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./static/sw.js');
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; });
+    function triggerInstall() {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+        else if (isIOS) { alert('لتثبيت التطبيق على الآيفون:\n1. اضغط زر المشاركة (⬆️) في سفاري.\n2. اختر (إضافة إلى الشاشة الرئيسية).'); }
+        else { alert('لتثبيت التطبيق: اضغط قائمة المتصفح (⋮) ثم (تثبيت التطبيق).'); }
+    }
+
+        const PUBLIC_WORKER_URL = "https:" + "//quran-ai-proxy." + "obadayahya044.workers.dev";
+
+    async function runFastAI(audioBlob) {
+        const st = document.getElementById('status');
+        const groqKey = localStorage.getItem('q_groq_key');
+        const useWorker = PUBLIC_WORKER_URL.startsWith("http");
+
+        if (!useWorker && !groqKey) {
+            alert('⚠️ يرجى تفعيل المحرك الفائق أو ربط رابط الوسيط السحابي أولاً.');
+            return '';
+        }
+        st.innerText = '⚡ جاري التحليل الفائق (0.5 ثانية)...';
+        const ext = audioBlob.type.includes('mp4') ? 'rec.mp4' : 'rec.webm';
+        const fd = new FormData();
+        fd.append('file', audioBlob, ext);
+        fd.append('model', 'whisper-large-v3');
+        fd.append('language', 'ar');
+        const sIdx = document.getElementById("surahSelect").value;
+        const a1 = parseInt(document.getElementById("startAyah").value);
+        const a2 = parseInt(document.getElementById("endAyah").value);
+        const hintText = surahs[sIdx].verses.slice(a1 - 1, a2).map(v => v.text).join(" ").slice(0, 150);
+        fd.append("prompt", hintText);
+        fd.append("temperature", "0");
+
+        try {
+            const targetUrl = useWorker ? PUBLIC_WORKER_URL : ("https:" + "//api." + "groq.com" + "/openai/v1/audio/transcriptions");
+            const headers = useWorker ? {} : { 'Authorization': 'Bearer ' + groqKey };
+            const resp = await fetch(targetUrl, { method: 'POST', headers: headers, body: fd });
+            const data = await resp.json();
+            if (data.text) return data.text;
+            alert('❌ تنبيه: ' + (data.error ? data.error.message : 'تعذر التحليل'));
+            return '';
+        } catch (err) {
+            alert('❌ خطأ في الاتصال: ' + err.message);
+            return '';
+        }
+    }
+
+    function setGroqKey() {
+        const cur = localStorage.getItem('q_groq_key') || '';
+        const k = prompt('أدخل مفتاح Groq API السريع (يبدأ بـ gsk_):', cur);
+        if (k !== null && k.trim()) {
+            localStorage.setItem('q_groq_key', k.trim());
+            alert('✅ تم حفظ المفتاح وتفعيل السرعة الفائقة!');
+        }
+    }
+        let activePlanDayIdx = null;
+    function startPlanDay(idx, sIdx, a1, a2) {
+        activePlanDayIdx = idx;
+        switchTab("recite");
+        document.getElementById("surahSelect").value = sIdx;
+        onSurahChange();
+        document.getElementById("startAyah").value = a1;
+        document.getElementById("endAyah").value = a2;
+        renderAyahs();
+    }
+    let surahs = [], globalMap = {}, isKids = false, isHidden = false;
+    let isSessionActive = false, micStream, fullRecorder, fullChunks = [], isListening = false, playQueue = [], playIdx = 0;
+
+        function normalizeArabic(text) {
+        text = text.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g, "")
+                   .replace(/[إأآاٱ]/g, "ا")
+                   .replace(/ى/g, "ي")
+                   .replace(/ؤ/g, "و")
+                   .replace(/ئ/g, "ي")
+                   .replace(/ة/g, "ه")
+                   .replace(/[^\w\s\u0600-\u06FF]/g, "");
+        const map = {
+            "الرحمن":"الرحمان", "العلمين":"العالمين", "ملك":"مالك",
+            "الصلوه":"الصلاه", "الزكوه":"الزكاه", "الحيوه":"الحياه",
+            "السموت":"السماوات", "سموت":"سماوات", "الكتب":"الكتاب",
+            "ذلك":"ذالك", "لكن":"لاكن", "هؤلاء":"هاؤلاء", "اله":"الاه"
+        };
+        return text.split(/\s+/).filter(Boolean).map(w => map[w] || w).join(" ");
+    }
+
+    function simRatio(a, b) {
+        if (!a || !b) return 0;
+        if (a === b) return 1;
+        const m = a.length, n = b.length;
+        const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+        for (let i = 0; i <= m; i++) dp[i][0] = i;
+        for (let j = 0; j <= n; j++) dp[0][j] = j;
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+            }
+        }
+        return 1 - (dp[m][n] / Math.max(m, n));
+    }
+
+    function evaluateRecitation(origWords, spokenText) {
+        const userWords = normalizeArabic(spokenText).split(/\s+/).filter(Boolean);
+        let uIdx = 0, correct = 0, html = [];
+        origWords.forEach(ow => {
+            const cw = normalizeArabic(ow);
+            let found = false;
+            for (let look = 0; look < 4 && (uIdx + look) < userWords.length; look++) {
+                if (simRatio(cw, userWords[uIdx + look]) >= 0.75) {
+                    uIdx += look + 1;
+                    found = true;
+                    break;
+                }
+            }
+            if (found) { html.push(`<span class="word-ok">${ow}</span>`); correct++; }
+            else { html.push(`<span class="word-miss">${ow}</span>`); }
+        });
+        return { accuracy: origWords.length ? Math.round((correct / origWords.length) * 100) : 0, html: html.join(" ") };
+    }
+
+    function initProfile() {
+        const n = localStorage.getItem('q_user_name'), a = localStorage.getItem('q_user_age');
+        if (n) { document.getElementById('userNameInput').value = n; document.getElementById('displayUserName').innerText = n; document.getElementById('drawerUserName').innerText = n; }
+        if (a) { document.getElementById('userAgeInput').value = a; document.getElementById('displayUserAge').innerText = `(${a} سنة)`; }
+        let st = localStorage.getItem('q_stars') || 0, ss = localStorage.getItem('q_sessions') || 0;
+        document.getElementById('starsCount').innerText = st; document.getElementById('drawerStars').innerText = st;
+        document.getElementById('sessionsCount').innerText = ss; document.getElementById('drawerSessions').innerText = ss;
+    }
+    initProfile();
+
+    function saveProfileAndEnter(kidsMode) {
+        const n = document.getElementById('userNameInput').value.trim(), a = document.getElementById('userAgeInput').value.trim();
+        if (!n) { alert('يرجى كتابة اسمك الكريم 🌟'); return; }
+        localStorage.setItem('q_user_name', n); if (a) localStorage.setItem('q_user_age', a);
+        initProfile();
+        if (kidsMode && !isKids) toggleMode(); else if (!kidsMode && isKids) toggleMode();
+        document.getElementById('splashScreen').classList.add('hide-splash');
+    }
+    function editProfile() { document.getElementById('splashScreen').classList.remove('hide-splash'); }
+    function toggleDrawer() { const d = document.getElementById('sideDrawer'), ov = document.getElementById('drawerOverlay'); const op = d.classList.toggle('open'); ov.style.display = op ? 'block' : 'none'; if (op) renderHistory(); }
+    fetch('./quran_full.json').then(r => r.json()).then(data => {
+        surahs = data; let g = 1;
+        const sel = document.getElementById('surahSelect'), s1 = document.getElementById('qStartSurah'), s2 = document.getElementById('qEndSurah');
+        data.forEach((s, idx) => {
+            s.verses.forEach(v => { globalMap[`${s.id}_${v.id}`] = g++; });
+            let opt = document.createElement('option'); opt.value = idx; opt.text = `${s.id}. سورة ${s.name}`;
+            sel.appendChild(opt); s1.appendChild(opt.cloneNode(true)); s2.appendChild(opt.cloneNode(true));
+        });
+        s1.value = 77; s2.value = 113; onSurahChange(); renderSavedPlan();
+    });
+
+    function onSurahChange() {
+        stopListen(); const s = surahs[document.getElementById('surahSelect').value];
+        const st = document.getElementById('startAyah'), en = document.getElementById('endAyah'); st.innerHTML = ''; en.innerHTML = '';
+        for (let i = 1; i <= s.total_verses; i++) {
+            let o1 = document.createElement('option'); o1.value = i; o1.text = `آية ${i}`;
+            let o2 = document.createElement('option'); o2.value = i; o2.text = `آية ${i}`;
+            st.appendChild(o1); en.appendChild(o2);
+        }
+        en.value = Math.min(s.total_verses, 5); renderAyahs();
+    }
+
+    function renderAyahs() {
+        stopListen(); const s = surahs[document.getElementById('surahSelect').value];
+        let st = parseInt(document.getElementById('startAyah').value), en = parseInt(document.getElementById('endAyah').value);
+        if (en < st) { en = st; document.getElementById('endAyah').value = en; }
+        const txt = s.verses.slice(st - 1, en).map(v => `${v.text} ﴿${v.id}﴾`).join(' ');
+        document.getElementById('ayahText').innerHTML = `<span class="${isHidden ? 'word-masked' : ''}">${txt}</span>`;
+        document.getElementById('resultCard').style.display = 'none'; document.getElementById('status').style.display = 'none';
+    }
+
+    function nextPage() {
+        const sIdx = parseInt(document.getElementById('surahSelect').value), s = surahs[sIdx];
+        let st = parseInt(document.getElementById('startAyah').value), en = parseInt(document.getElementById('endAyah').value), step = Math.max(1, en - st + 1);
+        if (en < s.total_verses) { document.getElementById('startAyah').value = en + 1; document.getElementById('endAyah').value = Math.min(s.total_verses, en + step); renderAyahs(); }
+        else if (sIdx < surahs.length - 1) { document.getElementById('surahSelect').value = sIdx + 1; onSurahChange(); }
+    }
+    function prevPage() {
+        const sIdx = parseInt(document.getElementById('surahSelect').value);
+        let st = parseInt(document.getElementById('startAyah').value), en = parseInt(document.getElementById('endAyah').value), step = Math.max(1, en - st + 1);
+        if (st > 1) { document.getElementById('startAyah').value = Math.max(1, st - step); document.getElementById('endAyah').value = st - 1; renderAyahs(); }
+        else if (sIdx > 0) { document.getElementById('surahSelect').value = sIdx - 1; onSurahChange(); }
+    }
+    function toggleHide() { isHidden = !isHidden; renderAyahs(); }
+    function switchTab(t) { document.getElementById('reciteSection').style.display = t === 'recite' ? 'block' : 'none'; document.getElementById('plannerSection').style.display = t === 'planner' ? 'block' : 'none'; document.getElementById('tabRecite').classList.toggle('active', t === 'recite'); document.getElementById('tabPlanner').classList.toggle('active', t === 'planner'); }
+    function toggleMode() { isKids = !isKids; document.body.classList.toggle('kids-mode', isKids); document.getElementById('modeBtn').innerText = isKids ? '🕌 وضع الكبار' : '🎈 وضع الصغار'; document.getElementById('adultTabs').style.display = isKids ? 'none' : 'flex'; if (isKids) switchTab('recite'); }
+    function toggleListen() {
+        if (isSessionActive) return;
+        const btn = document.getElementById('listenBtn'), aSt = document.getElementById('audioStatus');
+        if (!isListening) {
+            const sId = parseInt(document.getElementById('surahSelect').value) + 1, st = parseInt(document.getElementById('startAyah').value), en = parseInt(document.getElementById('endAyah').value);
+            playQueue = []; for (let a = st; a <= en; a++) playQueue.push({ ayah: a, gid: globalMap[`${sId}_${a}`] });
+            playIdx = 0; isListening = true; btn.innerText = '⏹️ إيقاف تلاوة الشيخ'; btn.style.background = '#c62828'; aSt.style.display = 'block'; playNextAyah();
+        } else stopListen();
+    }
+    function playNextAyah() {
+        if (!isListening || playIdx >= playQueue.length) { stopListen(); return; }
+        const item = playQueue[playIdx], audio = document.getElementById('quranAudio');
+        document.getElementById('audioStatus').innerText = `🎧 يتلو الآن: الآية (${item.ayah}) بصوت الشيخ علي الحذيفي`;
+        audio.src = "https:" + "//cdn.islamic.network/quran/audio/128/ar.hudhaify/" + item.gid + ".mp3";
+        audio.play(); audio.onended = () => { playIdx++; playNextAyah(); };
+    }
+    function stopListen() { isListening = false; const a = document.getElementById('quranAudio'); if (a) { a.pause(); a.currentTime = 0; } const b = document.getElementById('listenBtn'); if (b) { b.innerText = '🔊 استماع لتلاوة الشيخ علي الحذيفي'; b.style.background = '#00695c'; } const s = document.getElementById('audioStatus'); if (s) s.style.display = 'none'; }
+
+    async function toggleRecord() {
+        const btn = document.getElementById('recBtn'), st = document.getElementById('status'), lBtn = document.getElementById('listenBtn');
+        if (!isSessionActive) {
+            stopListen(); lBtn.disabled = true; lBtn.style.opacity = '0.5';
+            micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const opts = MediaRecorder.isTypeSupported('audio/webm') ? { mimeType: 'audio/webm' } : {};
+            fullRecorder = new MediaRecorder(micStream, opts); fullChunks = [];
+            fullRecorder.ondataavailable = e => { if (e.data.size > 0) fullChunks.push(e.data); };
+            fullRecorder.onstop = processSession; fullRecorder.start(250);
+            isSessionActive = true; btn.innerText = '⏹️ إنهاء الجلسة وعرض التصحيح'; btn.classList.add('recording');
+            st.style.display = 'block'; st.innerText = '🎙️ الجلسة مفتوحة... اقرأ براحتك ثم اضغط إنهاء الجلسة';
+        } else {
+            isSessionActive = false; fullRecorder.stop(); micStream.getTracks().forEach(t => t.stop());
+            btn.innerText = '🎙️ اضغط لبدء التسميع'; btn.classList.remove('recording'); btn.disabled = true;
+            st.style.display = 'block'; st.innerText = '⚡ جاري التحليل الفائق...';
+        }
+    }
+    async function processSession() {
+        const btn = document.getElementById('recBtn'), st = document.getElementById('status'), lBtn = document.getElementById('listenBtn');
+        const blob = new Blob(fullChunks, { type: fullRecorder.mimeType || 'audio/webm' });
+        const spoken = await runFastAI(blob);
+        btn.disabled = false; lBtn.disabled = false; lBtn.style.opacity = '1'; st.style.display = 'none';
+        if (!spoken) return;
+
+        const sIdx = document.getElementById('surahSelect').value, s = surahs[sIdx];
+        const a1 = parseInt(document.getElementById('startAyah').value), a2 = parseInt(document.getElementById('endAyah').value);
+        const origWords = s.verses.slice(a1 - 1, a2).map(v => v.text).join(' ').split(/\s+/);
+        const res = evaluateRecitation(origWords, spoken);
+
+        document.getElementById('resultCard').style.display = 'block';
+        let stars = Math.ceil(res.accuracy / 20);
+        document.getElementById('scoreBadge').innerText = `التقييم النهائي: ${res.accuracy}% ${isKids ? ' ⭐'.repeat(stars) : ''}`;
+        document.getElementById('resultDetails').innerHTML = res.html;
+        document.getElementById('ayahText').innerHTML = res.html;
+
+        localStorage.setItem('q_stars', parseInt(localStorage.getItem('q_stars') || 0) + stars);
+                if (res.accuracy >= 80) {
+            localStorage.setItem('q_sessions', parseInt(localStorage.getItem('q_sessions') || 0) + 1);
+            if (activePlanDayIdx !== null) {
+                let sv = JSON.parse(localStorage.getItem('q_plan') || 'null');
+                if (sv && sv.days[activePlanDayIdx]) { sv.days[activePlanDayIdx].done = true; localStorage.setItem('q_plan', JSON.stringify(sv)); renderSavedPlan(); }
+            }
+        }
+        let hist = JSON.parse(localStorage.getItem('q_history') || '[]');
+        hist.unshift({ surah: s.name, range: `آية ${a1} إلى ${a2}`, accuracy: res.accuracy, stars: stars, date: new Date().toLocaleDateString('ar-SA') });
+        localStorage.setItem('q_history', JSON.stringify(hist)); initProfile();
+    }
+
+    function generatePlan() {
+        let s1 = parseInt(document.getElementById('qStartSurah').value), s2 = parseInt(document.getElementById('qEndSurah').value);
+        if (s2 < s1) s2 = s1;
+        const days = Math.max(1, parseInt(document.getElementById('qDays').value) || 7);
+        let all = []; for (let i = s1; i <= s2; i++) for (let v = 1; v <= surahs[i].total_verses; v++) all.push({ sIdx: i, sName: surahs[i].name, ayah: v });
+        const perDay = Math.ceil(all.length / days);
+        let pDays = [];
+        for (let d = 0; d < days; d++) {
+            let ch = all.slice(d * perDay, (d + 1) * perDay); if (!ch.length) break;
+            pDays.push({ day: d + 1, desc: `${ch.sName} (${ch.ayah}) - ${ch[ch.length-1].sName} (${ch[ch.length-1].ayah})`, sIdx: ch.sIdx, start: ch.ayah, end: ch.sIdx === ch[ch.length-1].sIdx ? ch[ch.length-1].ayah : surahs[ch.sIdx].total_verses });
+        }
+        localStorage.setItem('q_plan', JSON.stringify({ advice: `المطلوب ${all.length} آية بمعدل ${perDay} آية يومياً`, days: pDays }));
+        renderSavedPlan();
+    }
+    function renderSavedPlan() {
+        const sv = JSON.parse(localStorage.getItem('q_plan') || 'null');
+        if (!sv) { document.getElementById('planResultCard').style.display = 'none'; return; }
+        const totalDays = sv.days.length;
+        const doneDays = sv.days.filter(d => d.done).length;
+        const pct = totalDays ? Math.round((doneDays / totalDays) * 100) : 0;
+        document.getElementById('planPercentText').innerText = `${pct}% (${doneDays} من ${totalDays} أيام)`;
+        document.getElementById('planProgressBar').style.width = `${pct}%`;
+        document.getElementById('planAdvice').innerText = sv.advice;
+        document.getElementById('planSchedule').innerHTML = sv.days.map((i, idx) => `<div class="plan-item" style="${i.done ? 'background:#e8f5e9; border-right-color:#2e7d32;' : ''}"><div><strong>${i.done ? '✅ ' : ''}اليوم ${i.day}:</strong> ${i.desc}</div><button class="apply-btn" onclick="startPlanDay(${idx}, ${i.sIdx}, ${i.start}, ${i.end})">🎙️ سمّع</button></div>`).join('');
+        document.getElementById('planResultCard').style.display = 'block';
+    }
+    function clearPlan() { localStorage.removeItem('q_plan'); renderSavedPlan(); }
+    function renderHistory() {
+        const list = JSON.parse(localStorage.getItem('q_history') || '[]');
+        document.getElementById('historyList').innerHTML = list.length ? list.map(i => `<div class="plan-item"><div><strong>سورة ${i.surah}</strong> (${i.range})<br><small>${i.date}</small></div><div><strong>${i.accuracy}%</strong><br>${'⭐'.repeat(i.stars)}</div></div>`).join('') : '<p style="text-align:center;color:#777;">لا توجد تقييمات بعد</p>';
+    }
+    function clearHistory() { if (confirm('مسح السجل؟')) { localStorage.removeItem('q_history'); localStorage.setItem('q_stars', 0); localStorage.setItem('q_sessions', 0); initProfile(); renderHistory(); } }
+</script>
+</body>
+</html>
