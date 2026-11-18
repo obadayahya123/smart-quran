@@ -93,6 +93,7 @@
         </div>
         <div id="historyList" style="flex:1; overflow-y:auto; padding-left:4px;"></div>
         <button onclick="setGroqKey()" style="background:#1b5e20; color:white; border:none; font-weight:bold; margin-top:8px; cursor:pointer;">⚡ تفعيل المحرك الفائق (Groq API)</button>
+        <button onclick="forceAppUpdate()" style="background:#0277bd; color:white; border:none; font-weight:bold; margin-top:10px; cursor:pointer;">🔄 تحديث التطبيق لأحدث إصدار</button>
         <button onclick="clearHistory()" style="background:#d32f2f; color:white; border:none; font-weight:bold; margin-top:12px; cursor:pointer;">🗑️ مسح السجل وتصفير النجوم</button>
     </div>
 
@@ -549,6 +550,20 @@
 
     initProfile();
     loadQuranData();
+    async function forceAppUpdate() {
+        try {
+            if ("caches" in window) {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
+            }
+            if ("serviceWorker" in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (let r of regs) await r.unregister();
+            }
+        } catch (e) {}
+        alert("✅ جاري تحديث التطبيق لأحدث إصدار (بياناتك ونجومك محفوظة بأمان)...");
+        window.location.reload(true);
+    }
 </script>
 </body>
 </html>
